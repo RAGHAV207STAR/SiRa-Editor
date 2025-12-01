@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Download, Zap, Printer, Settings, ShieldCheck, Gift, FileQuestion } from 'lucide-react';
+import { Download, Zap, Printer, Settings, ShieldCheck, Gift, FileQuestion, ArrowRight, Minus, Plus } from 'lucide-react';
 import { usePWAInstall } from '@/hooks/use-pwa-install';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -16,8 +16,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { CollageTeaser } from './collage-teaser';
 import { useState, useEffect } from 'react';
+import { Input } from '@/components/ui/input';
 
 const copyOptions = [1, 2, 4, 6, 8, 10, 12, 20, 30];
 
@@ -27,6 +27,8 @@ interface HomepageBodyContentProps {
 
 export default function HomepageBodyContent({ onCollageClick }: HomepageBodyContentProps) {
   const [selectedCopies, setSelectedCopies] = useState<number | null>(null);
+  const [customCopies, setCustomCopies] = useState<string>('');
+  const [isCustomSelected, setIsCustomSelected] = useState(false);
   const router = useRouter();
   const { canInstall, install } = usePWAInstall();
   const { toast } = useToast();
@@ -42,13 +44,38 @@ export default function HomepageBodyContent({ onCollageClick }: HomepageBodyCont
     }
   }
 
-  useEffect(() => {
-    if (selectedCopies !== null) {
-      const params = new URLSearchParams();
-      params.set('copies', selectedCopies.toString());
-      router.push(`/editor?${params.toString()}`);
+  const handleSelect = (num: number) => {
+    setIsCustomSelected(false);
+    setSelectedCopies(num);
+    const params = new URLSearchParams();
+    params.set('copies', num.toString());
+    router.push(`/editor?${params.toString()}`);
+  }
+
+  const handleCustomSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const num = parseInt(customCopies, 10);
+    if (!isNaN(num) && num > 0) {
+        setSelectedCopies(num);
+        const params = new URLSearchParams();
+        params.set('copies', num.toString());
+        router.push(`/editor?${params.toString()}`);
+    } else {
+        toast({
+            variant: 'destructive',
+            title: 'Invalid Number',
+            description: 'Please enter a valid number of copies.'
+        })
     }
-  }, [selectedCopies, router]);
+  }
+
+  const updateCustomCopies = (amount: number) => {
+    setCustomCopies(prev => {
+        const current = parseInt(prev, 10) || 0;
+        const newValue = Math.max(1, current + amount);
+        return newValue.toString();
+    })
+  }
 
   const features = [
     { 
@@ -84,7 +111,7 @@ export default function HomepageBodyContent({ onCollageClick }: HomepageBodyCont
               <div className="py-4 flex justify-center">
                   <Button onClick={handleInstallClick} size="lg" className="rounded-full bg-gradient-to-r from-primary to-accent text-white shadow-lg transform transition-all hover:scale-105">
                       <Download className="mr-2 h-4 w-4"/>
-                      Install App
+                      Install App for a Better Experience
                   </Button>
               </div>
           )}
@@ -94,25 +121,58 @@ export default function HomepageBodyContent({ onCollageClick }: HomepageBodyCont
               whileHover={{ scale: 1.02 }}
               className="rounded-2xl bg-white/60 backdrop-blur-sm border border-white/20 p-1 shadow-2xl"
             >
-              <Card className="w-full bg-transparent border-0 rounded-xl p-0 relative">
+              <Card className="w-full bg-white/80 backdrop-blur-lg border-0 rounded-xl relative overflow-hidden">
+                <div className="absolute -top-1/2 -left-1/3 w-96 h-96 bg-cyan-200/20 rounded-full blur-3xl animate-glowMove -z-10" />
+                <div className="absolute -bottom-1/2 -right-1/4 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl animate-glowMove animation-delay-3000 -z-10" />
+
                 <div className="rounded-xl p-6">
                     <CardHeader className="text-center p-0 pb-6">
-                      <CardTitle className="text-2xl font-bold tracking-tight text-slate-800">Passport Photo Quick Start</CardTitle>
+                      <CardTitle as="h2" className="text-3xl font-extrabold tracking-tight animate-gradient-shift bg-[length:200%_auto] text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-blue-700">Passport Photo Quick Start</CardTitle>
                       <CardDescription className="text-slate-600">How many photos do you need on the sheet?</CardDescription>
                     </CardHeader>
                     <CardContent className="p-0">
+                      <motion.form 
+                          className="mb-4 flex items-stretch justify-center gap-2"
+                          onSubmit={handleCustomSubmit}
+                      >
+                          <div className="flex-grow flex items-center justify-center h-14 rounded-lg bg-slate-100 border p-1">
+                                <Button type="button" variant="ghost" size="icon" className="h-full w-12 text-muted-foreground hover:bg-slate-200" onClick={() => updateCustomCopies(-1)}><Minus className="h-5 w-5"/></Button>
+                                <Input 
+                                    type="number"
+                                    placeholder="e.g. 15"
+                                    className="h-full w-full max-w-[120px] text-center text-xl font-semibold bg-transparent border-0 shadow-none focus-visible:ring-0"
+                                    value={customCopies}
+                                    onChange={(e) => setCustomCopies(e.target.value)}
+                                    min="1"
+                                />
+                                <Button type="button" variant="ghost" size="icon" className="h-full w-12 text-muted-foreground hover:bg-slate-200" onClick={() => updateCustomCopies(1)}><Plus className="h-5 w-5"/></Button>
+                          </div>
+                          <motion.div whileTap={{ scale: 0.95 }} className="flex">
+                            <Button type="submit" size="lg" className="h-14 w-16 bg-slate-800 text-white hover:bg-slate-700 shadow-md">
+                                <span className="sr-only">Go</span>
+                                <ArrowRight className="h-6 w-6"/>
+                            </Button>
+                          </motion.div>
+                      </motion.form>
+
+                      <div className="relative my-4">
+                          <div className="absolute inset-0 flex items-center">
+                              <span className="w-full border-t" />
+                          </div>
+                          <div className="relative flex justify-center text-xs uppercase">
+                              <span className="bg-white/80 px-2 text-muted-foreground backdrop-blur-sm">Or choose a shortcut</span>
+                          </div>
+                      </div>
+
                       <div className="grid grid-cols-3 gap-4 w-full">
                         {copyOptions.map((num) => (
                           <Button
                             key={num}
-                            variant={selectedCopies === num ? 'default' : 'secondary'}
+                            variant={'secondary'}
                             className={cn(
-                              "py-6 text-xl font-bold rounded-lg transition-all duration-300 transform",
-                              selectedCopies === num 
-                                ? "shadow-lg scale-105 ring-2 ring-offset-2 ring-primary ring-offset-background" 
-                                : "shadow-md hover:scale-105 hover:shadow-lg"
+                              "py-6 text-xl font-bold rounded-lg transition-all duration-300 transform shadow-md hover:scale-105 hover:shadow-lg"
                             )}
-                            onClick={() => setSelectedCopies(num)}
+                            onClick={() => handleSelect(num)}
                           >
                             {num}
                           </Button>
@@ -124,13 +184,10 @@ export default function HomepageBodyContent({ onCollageClick }: HomepageBodyCont
             </motion.div>
           </div>
 
-          <div className="w-full max-w-4xl">
-             <CollageTeaser onCollageClick={onCollageClick} />
-          </div>
   
-          <section className="w-full max-w-4xl mx-auto py-12 px-4 md:px-0 text-slate-800">
+          <section className="w-full max-w-4xl mx-auto py-12 px-4 md:px-0 text-slate-800" aria-labelledby="features-heading">
               <div className="text-center">
-                  <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl animate-gradient-shift bg-[length:200%_auto] text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-blue-700">
+                  <h2 id="features-heading" className="text-3xl font-extrabold tracking-tight sm:text-4xl animate-gradient-shift bg-[length:200%_auto] text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-blue-700">
                       Your All-in-One Photo Solution
                   </h2>
                   <p className="mt-4 text-lg text-slate-600">
@@ -142,7 +199,7 @@ export default function HomepageBodyContent({ onCollageClick }: HomepageBodyCont
               </div>
   
               <div className="mt-12">
-                  <h3 className="text-3xl font-bold text-center mb-8 animate-gradient-shift bg-[length:200%_auto] text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-blue-700">Why Choose SiRa Editor?</h3>
+                  <h3 className="text-3xl font-bold text-center mb-8 animate-gradient-shift bg-[length:200%_auto] text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-blue-700">Why Choose Our Photosheet Maker?</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {features.map((feature, index) => (
                         <Card key={index} className="bg-white/70 backdrop-blur-sm border-white/20 shadow-lg hover:shadow-xl transition-shadow">
@@ -150,7 +207,7 @@ export default function HomepageBodyContent({ onCollageClick }: HomepageBodyCont
                             <div className="p-2 bg-gradient-to-br from-blue-100 to-sky-200 rounded-lg">
                               <feature.icon className="h-6 w-6 text-blue-600" />
                             </div>
-                            <CardTitle className="text-lg font-semibold">{feature.title}</CardTitle>
+                            <CardTitle as="h4" className="text-lg font-semibold">{feature.title}</CardTitle>
                           </CardHeader>
                           <CardContent>
                             <p className="text-sm text-slate-600">{feature.description}</p>
@@ -160,16 +217,22 @@ export default function HomepageBodyContent({ onCollageClick }: HomepageBodyCont
                   </div>
               </div>
   
-              <div className="mt-16">
+              <div className="mt-16" role="region" aria-labelledby="faq-heading">
                   <div className="flex flex-col items-center text-center mb-8">
                       <FileQuestion className="h-10 w-10 mb-2 text-blue-600" />
-                      <h3 className="text-3xl font-bold text-center animate-gradient-shift bg-[length:200%_auto] text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-blue-700">Frequently Asked Questions</h3>
+                      <h3 id="faq-heading" className="text-3xl font-bold text-center animate-gradient-shift bg-[length:200%_auto] text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-blue-700">Frequently Asked Questions</h3>
                   </div>
                   <Accordion type="single" collapsible className="w-full space-y-4">
                        <AccordionItem value="item-1" className="bg-white/70 backdrop-blur-sm border border-white/20 shadow-lg rounded-lg">
                           <AccordionTrigger className="px-6 text-left">How do I make a passport photo online with this tool?</AccordionTrigger>
                           <AccordionContent className="px-6">
                           To make a passport photo online, simply select the number of copies you need from the "Quick Start" section, upload your image on the next screen, and our tool will automatically arrange it on an A4 sheet. You can then download the sheet as a PNG and print it.
+                          </AccordionContent>
+                      </AccordionItem>
+                      <AccordionItem value="item-5" className="bg-white/70 backdrop-blur-sm border border-white/20 shadow-lg rounded-lg">
+                          <AccordionTrigger className="px-6 text-left">Can I create an Indian passport size photo?</AccordionTrigger>
+                          <AccordionContent className="px-6">
+                          Yes, you can. Our editor is fully customizable. In the "Page Setup" step, you can set the photo dimensions to the specific requirements for an Indian passport size photo (typically 3.5cm x 4.5cm) and our tool will create a perfect sheet for you.
                           </AccordionContent>
                       </AccordionItem>
                       <AccordionItem value="item-2" className="bg-white/70 backdrop-blur-sm border border-white/20 shadow-lg rounded-lg">
@@ -208,3 +271,9 @@ export default function HomepageBodyContent({ onCollageClick }: HomepageBodyCont
       </>
   );
 }
+    
+    
+
+    
+
+
