@@ -4,13 +4,11 @@
 import { useEditor, type PageSize, type ImageWithDimensions, type Photo } from '@/context/editor-context';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import SheetPreview from '../sheet-preview';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
-import { useUser, useFirestore, addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
-import { collection, serverTimestamp, doc } from 'firebase/firestore';
-import { ArrowLeft, ChevronLeft, ChevronRight, FileImage, FileText, Loader2, Printer, RotateCcw, RectangleVertical, RectangleHorizontal, Settings, Image as ImageIcon, Layout, Type, AlignCenter, AlignLeft, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Expand, Shrink, RotateCw, Download } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, FileImage, FileText, Loader2, Printer, RotateCcw, RectangleVertical, RectangleHorizontal, Settings, Image as ImageIcon, Layout, Type, AlignCenter, AlignLeft, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Expand, Shrink, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
@@ -22,7 +20,6 @@ import { useDraggable } from '@dnd-kit/core';
 import Image from 'next/image';
 import { SortableContext } from '@dnd-kit/sortable';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
@@ -229,7 +226,7 @@ const GlobalSettingsPanel = () => {
 }
 
 const PhotoSettingsPanel = ({ photo, onBack }: { photo: Photo, onBack: () => void }) => {
-    const { updatePhotoText, updatePhotoStyle, rotatePhoto, togglePhotoFit } = useEditor();
+    const { updatePhotoText, updatePhotoStyle, togglePhotoFit } = useEditor();
 
     return (
         <>
@@ -242,8 +239,7 @@ const PhotoSettingsPanel = ({ photo, onBack }: { photo: Photo, onBack: () => voi
             <CardContent className="space-y-4">
                  <div className="space-y-4">
                     <h3 className="text-sm font-semibold flex items-center text-muted-foreground"><ImageIcon className="mr-2 h-4 w-4" /> Photo Style</h3>
-                    <div className="grid grid-cols-2 gap-2 pl-2">
-                       <Button variant="outline" onClick={() => rotatePhoto(photo.id)}><RotateCw className="mr-2 h-4 w-4" /> Rotate</Button>
+                    <div className="grid grid-cols-1 gap-2 pl-2">
                        <Button variant="outline" onClick={() => togglePhotoFit(photo.id)}>
                            {photo.fit === 'cover' ? <Shrink className="mr-2 h-4 w-4" /> : <Expand className="mr-2 h-4 w-4" />}
                            {photo.fit === 'cover' ? 'Contain' : 'Cover'}
@@ -448,17 +444,18 @@ export default function PreviewStep({ onBack }: PreviewStepProps) {
     photos,
     currentSheet,
     setCurrentSheet,
-    borderWidth, 
-    borderColor,
     pageWidthCm,
     pageHeightCm,
     selectedPhotoId,
     setSelectedPhotoId,
-    saveToHistory
   } = useEditor();
 
+  const handleBack = useCallback(() => {
+    onBack();
+  }, [onBack]);
+
   const totalSheets = photos.length;
-  const photosOnCurrentSheet = useMemo(() => photos[currentSheet] || [], [photos, currentSheet]);
+  const currentSheetPhotos = useMemo(() => photos[currentSheet] || [], [photos, currentSheet]);
   const selectedPhoto = useMemo(() => {
     if (selectedPhotoId === null) return null;
     return photos.flat().find(p => p.id === selectedPhotoId) || null;
@@ -471,7 +468,7 @@ export default function PreviewStep({ onBack }: PreviewStepProps) {
     return '210/297';
   }, [pageWidthCm, pageHeightCm]);
 
-  const currentPhotoIds = useMemo(() => photosOnCurrentSheet.map(p => p.id), [photosOnCurrentSheet]);
+  const currentPhotoIds = useMemo(() => currentSheetPhotos.map(p => p.id), [currentSheetPhotos]);
 
   return (
     <div className="flex-grow w-full h-full flex flex-col md:flex-row p-2 sm:p-4 md:p-6 gap-6 pb-24 md:pb-6">
@@ -491,12 +488,7 @@ export default function PreviewStep({ onBack }: PreviewStepProps) {
           <div className="w-full max-w-lg shadow-lg border rounded-lg bg-slate-100 p-2 mt-4">
               <div className="w-full relative" style={{aspectRatio}}>
                   <SortableContext items={currentPhotoIds}>
-                    <SheetPreview 
-                      photos={photos}
-                      currentSheet={currentSheet}
-                      borderWidth={borderWidth}
-                      borderColor={borderColor}
-                    />
+                    <SheetPreview photos={photos} />
                   </SortableContext>
               </div>
           </div>
@@ -532,7 +524,7 @@ export default function PreviewStep({ onBack }: PreviewStepProps) {
                   </AnimatePresence>
                   <Separator/>
                   <CardContent className="grid grid-cols-1 gap-4 pt-6">
-                      <Button variant="outline" onClick={onBack} className="w-full"><ArrowLeft className="mr-2 h-4 w-4" />Change Photos</Button>
+                      <Button variant="outline" onClick={handleBack} className="w-full"><ArrowLeft className="mr-2 h-4 w-4" />Change Photos</Button>
                   </CardContent>
               </Card>
             </ScrollArea>

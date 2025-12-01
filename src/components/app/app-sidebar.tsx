@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from 'next/link';
@@ -55,13 +54,15 @@ export default function AppSidebar() {
   if (!isClient) {
     // Return a static sidebar skeleton on the server to avoid hook errors.
     return (
-      <Sidebar collapsible="offcanvas">
-        <SidebarHeader>
-          <Link href="/" className="font-headline text-3xl">
-            <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-600 whitespace-nowrap">SiRa Editor</span>
-          </Link>
-        </SidebarHeader>
-      </Sidebar>
+      <div className="hidden md:block">
+        <Sidebar collapsible="offcanvas">
+          <SidebarHeader>
+            <Link href="/" className="font-headline text-3xl">
+              <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-600 whitespace-nowrap">SiRa Editor</span>
+            </Link>
+          </SidebarHeader>
+        </Sidebar>
+      </div>
     );
   }
 

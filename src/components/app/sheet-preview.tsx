@@ -3,29 +3,21 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { ImageIcon, RotateCw, Shrink, Expand } from 'lucide-react';
+import { ImageIcon } from 'lucide-react';
 import type { Photo } from '@/context/editor-context';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useEditor } from '@/context/editor-context';
-import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface PhotoItemProps {
   photo: Photo;
-  borderWidth: number;
-  borderColor: string;
-  isDragging?: boolean;
 }
 
 export function PhotoItem({ 
   photo, 
-  borderWidth,
-  borderColor,
-  isDragging,
 }: PhotoItemProps) {
 
-  const { rotatePhoto, togglePhotoFit, selectedPhotoId, setSelectedPhotoId } = useEditor();
+  const { selectedPhotoId, setSelectedPhotoId, borderWidth, borderColor } = useEditor();
   const isSelected = selectedPhotoId === photo.id;
 
   const {
@@ -35,6 +27,7 @@ export function PhotoItem({
     transform,
     transition,
     isOver,
+    isDragging,
   } = useSortable({
       id: photo.id,
       data: {
@@ -51,7 +44,8 @@ export function PhotoItem({
       top: `${photo.y}%`,
       width: `${photo.width}%`,
       height: `${photo.height}%`,
-      opacity: isDragging ? 0.5 : 1,
+      opacity: isDragging ? 0.4 : 1,
+      zIndex: isDragging ? 20 : (isSelected ? 10 : 1),
   };
 
   const textVerticalAlignClass = {
@@ -65,18 +59,6 @@ export function PhotoItem({
     'center': 'text-center',
     'right': 'text-right'
   }[photo.textAlign];
-
-  const handleRotate = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    rotatePhoto(photo.id);
-  }
-
-  const handleToggleFit = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    togglePhotoFit(photo.id);
-  }
 
   const handleSelect = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -92,10 +74,9 @@ export function PhotoItem({
       {...listeners}
       data-photo-id={photo.id}
       className={cn(
-          'photo-item group', 
-          isOver && !isDragging && 'drag-over',
-          !photo.imageSrc && 'z-0',
-          isSelected && !isDragging && 'ring-2 ring-primary ring-offset-2 z-10'
+          'photo-item group transition-all duration-200', 
+          isSelected && !isDragging && 'ring-2 ring-primary ring-offset-2',
+          isOver && !isDragging && 'drag-over'
       )}
       onClick={handleSelect}
     >
@@ -115,7 +96,6 @@ export function PhotoItem({
               "photo-preview pointer-events-none w-full h-full",
               photo.fit === 'cover' ? 'object-cover' : 'object-contain'
             )}
-            style={{ transform: `rotate(${photo.rotation}deg)` }}
           />
           {photo.text && (
             <div 
@@ -138,42 +118,6 @@ export function PhotoItem({
             </div>
           )}
 
-           <div className="absolute top-1 right-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity no-print flex items-center gap-1">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                      variant="secondary"
-                      size="icon"
-                      className="h-6 w-6 rounded-full shadow-md"
-                      onClick={handleToggleFit}
-                      onPointerDown={(e) => e.stopPropagation()}
-                  >
-                      {photo.fit === 'cover' ? <Shrink className="h-3 w-3" /> : <Expand className="h-3 w-3" />}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Toggle Fit ({photo.fit === 'cover' ? 'Contain' : 'Cover'})</p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                      variant="secondary"
-                      size="icon"
-                      className="h-6 w-6 rounded-full shadow-md"
-                      onClick={handleRotate}
-                      onPointerDown={(e) => e.stopPropagation()}
-                  >
-                      <RotateCw className="h-3 w-3" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Rotate Photo</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-           </div>
         </div>
       ) : (
         <div className="w-full h-full border-dashed border-slate-300" style={{borderWidth: '2px'}}>
@@ -187,45 +131,36 @@ export function PhotoItem({
 };
 
 
-const SheetPreview = React.forwardRef<HTMLDivElement, {
-  photos: Photo[][];
-  currentSheet: number;
-  borderWidth: number;
-  borderColor: string;
-}>((props, ref) => {
+const SheetPreview = React.forwardRef<HTMLDivElement, { photos: Photo[][] }>((props, ref) => {
   const { 
-    photos, 
     currentSheet, 
-    borderWidth,
-    borderColor
-  } = props;
-
-  const { setSelectedPhotoId } = useEditor();
+    setSelectedPhotoId
+  } = useEditor();
 
   const handleBackgroundClick = () => {
     setSelectedPhotoId(null);
   }
 
+  const currentSheetPhotos = props.photos[currentSheet] || [];
+
   return (
     <div ref={ref} id="sheet-container" className="w-full h-full bg-white" onClick={handleBackgroundClick}>
-      {photos.map((sheetData, sheetIndex) => (
+      {props.photos.map((sheetData, sheetIndex) => (
         <div
           id={`sheet-${sheetIndex}`}
           className={cn("printable-area w-full h-full relative bg-white", sheetIndex !== currentSheet && "hidden")}
-          key={`${sheetIndex}-${photos.length}-${borderWidth}-${borderColor}-${JSON.stringify(sheetData[0])}`}
+          key={sheetIndex}
         >
           {sheetData.map((photo) => {
             return (
               <PhotoItem 
                 key={photo.id} 
                 photo={photo}
-                borderWidth={borderWidth}
-                borderColor={borderColor}
               />
             )
           })}
           
-          {sheetData.length === 0 && (
+          {currentSheetPhotos.length === 0 && (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-muted-foreground p-4 no-print">
                 <ImageIcon className="h-12 w-12 mb-4" />
                 <h3 className="text-lg font-semibold">A4 Preview</h3>
@@ -239,4 +174,4 @@ const SheetPreview = React.forwardRef<HTMLDivElement, {
 });
 
 SheetPreview.displayName = "SheetPreview";
-export default SheetPreview;
+export default React.memo(SheetPreview);
