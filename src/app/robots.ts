@@ -8,20 +8,31 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
+        userAgent: '*',
+        allow: '/',
+        disallow: [
+          '/api/',      // Disallow all API routes
+          '/profile/',  // Disallow profile pages
+          '/login',     // Disallow login page
+        ],
+      },
+      {
         userAgent: 'Googlebot',
         allow: '/',
-        disallow: ['/api/', '/profile', '/login'],
+        disallow: [
+          '/api/',
+          '/profile/',
+          '/login',
+        ],
       },
       {
         userAgent: 'Bingbot',
         allow: '/',
-        disallow: ['/api/', '/profile', '/login'],
-      },
-      {
-        userAgent: '*',
-        allow: '/',
-        disallow: ['/api/', '/profile', '/login'],
-        crawlDelay: 10,
+        disallow: [
+          '/api/',
+          '/profile/',
+          '/login',
+        ],
       },
     ],
     sitemap: sitemapUrl,

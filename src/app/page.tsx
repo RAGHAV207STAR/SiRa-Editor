@@ -8,16 +8,7 @@ import Image from 'next/image';
 import { Skeleton } from '@/components/ui/skeleton';
 import dynamic from 'next/dynamic';
 import { useToast } from '@/hooks/use-toast';
-
-const HomepageBodyContent = dynamic(() => import('@/components/app/homepage-body-content'), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full max-w-4xl space-y-8">
-      <Skeleton className="h-48 w-full" />
-      <Skeleton className="h-72 w-full" />
-    </div>
-  ),
-});
+import HomepageBodyContent from '@/components/app/homepage-body-content';
 
 // This is a Client Component to manage the state of the SmartPhotoPicker.
 export default function Home() {

@@ -226,7 +226,7 @@ function HistoryItem({ sheet, selectionMode, isSelected, onToggleSelect, setSele
 const HistorySkeleton = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {[...Array(8)].map((_, i) => (
-             <Card key={i}>
+             <Card key={`skeleton-${i}`}>
                 <Skeleton className="aspect-[4/3] w-full" />
                 <div className="p-4 space-y-2">
                     <Skeleton className="h-4 w-3/4" />
@@ -542,3 +542,5 @@ export function HistoryPageClient() {
     </div>
   );
 }
+
+    

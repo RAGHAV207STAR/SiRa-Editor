@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 const config: Config = {
@@ -14,7 +13,7 @@ const config: Config = {
     extend: {
       fontFamily: {
         body: ['var(--font-inter)', 'sans-serif'],
-        headline: ['Brush Script MT', 'Brush Script Std', 'cursive'],
+        headline: ['cursive'],
         code: ['monospace'],
       },
       colors: {

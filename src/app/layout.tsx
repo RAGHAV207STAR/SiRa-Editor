@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     template: `%s | ${APP_NAME}`,
   },
   description: APP_DESCRIPTION,
-  keywords: ["Photo Editor", "SiRa Editor", "Photo Sheet Maker", "Collage Maker", "Passport Photo", "Online Editor", "HD Photo Maker", "Layout Creator"],
+  keywords: ["Photosheet Maker", "Passport size photo maker", "passport size photo editor", "passport size photo", "Photo Editor", "SiRa Editor", "Photo Sheet Maker", "Collage Maker", "Passport Photo", "Online Editor", "HD Photo Maker", "Layout Creator"],
   
   metadataBase: new URL(APP_URL),
   alternates: {
@@ -73,6 +73,7 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "default",
     title: APP_NAME,
+    // startupImage: [], // Can be added later
   },
   formatDetection: {
     telephone: false,

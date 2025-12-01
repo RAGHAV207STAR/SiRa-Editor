@@ -19,7 +19,6 @@ export interface Photo {
   fontSize: number; // percentage of photo height
   textAlign: 'left' | 'center' | 'right';
   textVerticalAlign: 'top' | 'middle' | 'bottom';
-  rotation: 0 | 90 | 180 | 270;
   fit: 'cover' | 'contain';
 }
 
@@ -64,7 +63,7 @@ const handleNumberSetter = (value: NumberSetterValue): number => {
 export type EditorState = Omit<EditorContextType, 
   'setImages' | 'setCopies' | 'setPhotos' | 'setCurrentSheet' | 
   'setSelectedPhotoId' | 'swapPhotoItems' | 'placeImageInSlot' | 
-  'updatePhotoText' | 'updatePhotoStyle' | 'rotatePhoto' | 'togglePhotoFit' |
+  'updatePhotoText' | 'updatePhotoStyle' | 'togglePhotoFit' |
   'setBorderWidth' | 'setBorderColor' | 'setPhotoSpacing' | 'setPhotoSize' |
   'setUnit' | 'setPageSize' | 'setPageDimensions' | 'setOrientation' | 
   'setPageMargins' | 'setEditorState' | 'resetEditor' | 'resetLayout' | 'saveToHistory'
@@ -86,7 +85,6 @@ interface EditorContextType {
   placeImageInSlot: (imageSrc: string, slotId: number) => void;
   updatePhotoText: (photoId: number, text: string) => void;
   updatePhotoStyle: (photoId: number, styles: Partial<Pick<Photo, 'textColor' | 'fontSize' | 'textAlign' | 'textVerticalAlign'>>) => void;
-  rotatePhoto: (photoId: number) => void;
   togglePhotoFit: (photoId: number) => void;
 
   borderWidth: number;
@@ -142,7 +140,6 @@ const initialTextColor = '#FFFFFF';
 const initialFontSize = 8; // 8% of photo height
 const initialTextAlign = 'center';
 const initialTextVerticalAlign = 'bottom';
-const initialRotation = 0;
 const initialFit = 'cover';
 
 export function EditorProvider({ children }: { children: React.ReactNode }) {
@@ -302,7 +299,6 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
             fontSize: existingPhoto?.fontSize || initialFontSize,
             textAlign: existingPhoto?.textAlign || initialTextAlign,
             textVerticalAlign: existingPhoto?.textVerticalAlign || initialTextVerticalAlign,
-            rotation: existingPhoto?.rotation || initialRotation,
             fit: existingPhoto?.fit || initialFit,
         });
     }
@@ -334,7 +330,6 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
             fontSize: currentSheetPhotos[activeIndex].fontSize,
             textAlign: currentSheetPhotos[activeIndex].textAlign,
             textVerticalAlign: currentSheetPhotos[activeIndex].textVerticalAlign,
-            rotation: currentSheetPhotos[activeIndex].rotation,
             fit: currentSheetPhotos[activeIndex].fit,
         };
         const overPhotoProps = {
@@ -344,7 +339,6 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
             fontSize: currentSheetPhotos[overIndex].fontSize,
             textAlign: currentSheetPhotos[overIndex].textAlign,
             textVerticalAlign: currentSheetPhotos[overIndex].textVerticalAlign,
-            rotation: currentSheetPhotos[overIndex].rotation,
             fit: currentSheetPhotos[overIndex].fit,
         };
 
@@ -376,7 +370,6 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
             fontSize: initialFontSize,
             textAlign: initialTextAlign,
             textVerticalAlign: initialTextVerticalAlign,
-            rotation: initialRotation,
             fit: initialFit,
         };
         newSheets[currentSheet] = updatedSheet;
@@ -403,20 +396,6 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
                 photo.id === photoId ? { ...photo, ...styles } : photo
             )
         );
-    });
-  }, []);
-
-  const rotatePhoto = useCallback((photoId: number) => {
-    setPhotos(prevSheets => {
-      return prevSheets.map(sheet =>
-        sheet.map(photo => {
-          if (photo.id === photoId) {
-            const newRotation = ((photo.rotation + 90) % 360) as Photo['rotation'];
-            return { ...photo, rotation: newRotation };
-          }
-          return photo;
-        })
-      );
     });
   }, []);
 
@@ -522,7 +501,6 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
     placeImageInSlot,
     updatePhotoText,
     updatePhotoStyle,
-    rotatePhoto,
     togglePhotoFit,
     borderWidth,
     setBorderWidth,
@@ -569,3 +547,5 @@ export function useEditor() {
   }
   return context;
 }
+
+    

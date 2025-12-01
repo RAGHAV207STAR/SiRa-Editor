@@ -270,7 +270,7 @@ export function useCollection<T = any>(
         if (memoizedTargetRefOrQuery.type === 'collection') {
             path = (memoizedTargetRefOrQuery as CollectionReference).path;
         } else if ((memoizedTargetRefOrQuery as unknown as InternalQuery)?._query?.path) {
-            path = (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString();
+            path = (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.toString();
         }
 
         if (path) {
@@ -298,3 +298,5 @@ export function useCollection<T = any>(
   }
   return { data, isLoading, error };
 }
+
+    

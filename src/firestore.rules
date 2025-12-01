@@ -17,7 +17,7 @@ service cloud.firestore {
      * @return {boolean} True if the user is the owner, false otherwise.
      */
     function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+      return request.auth.uid == userId;
     }
 
     /**
@@ -39,5 +39,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

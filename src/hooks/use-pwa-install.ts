@@ -62,6 +62,9 @@ export const usePWAInstall = () => {
 
   const install = async () => {
     if (!installPromptEvent) {
+      // If the event is not available, it might be because the app is already installed,
+      // or the browser doesn't support it. You could show a message to the user.
+      console.log("Installation not available at the moment.");
       return;
     }
 

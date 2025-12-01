@@ -3,6 +3,16 @@ import { Suspense } from 'react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { HistoryLoader } from './history-loader';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'My Photosheet History',
+  description: 'Access, view, and reprint your previously created photo sheets and collages. Your personal history of all generated passport photos and layouts.',
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 // This is now a server component that wraps the client component.
 export default function HistoryPage() {
@@ -15,7 +25,7 @@ export default function HistoryPage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {[...Array(8)].map((_, i) => (
-                    <Card key={i}>
+                    <Card key={`history-skeleton-${i}`}>
                         <Skeleton className="aspect-[4/3] w-full" />
                         <div className="p-4 space-y-2">
                             <Skeleton className="h-4 w-3/4" />

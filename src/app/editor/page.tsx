@@ -1,27 +1,22 @@
 
-"use client";
-
-import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
-import { GoogleSpinner } from '@/components/ui/google-spinner';
+import type { Metadata } from 'next';
 import { EditorLoader } from './editor-loader';
+import { GoogleSpinner } from '@/components/ui/google-spinner';
 
-// The EditorWizard component uses client-side hooks (useSearchParams, useContext),
-// so it must be loaded on the client. We use dynamic import to code-split it.
-const EditorWizard = dynamic(() => import('@/components/app/editor-wizard'), {
-    loading: () => <div className="w-full h-screen flex flex-col items-center justify-center gap-4">
-        <GoogleSpinner />
-        <p className="text-muted-foreground font-semibold">Loading Editor...</p>
-    </div>,
-    ssr: false // Ensure this component only renders on the client
-});
+export const metadata: Metadata = {
+  title: 'Editor - Create Your Photosheet',
+  description: 'Create and customize your passport photos, ID photos, or any photo sheet layout with our easy-to-use online editor. Adjust size, copies, borders, and more.',
+};
 
 export default function EditorPage() {
   return (
-    <Suspense fallback={<div className="w-full h-screen flex flex-col items-center justify-center gap-4">
-        <GoogleSpinner />
-        <p className="text-muted-foreground font-semibold">Initializing Editor...</p>
-    </div>}>
+    <Suspense fallback={
+        <div className="w-full h-screen flex flex-col items-center justify-center gap-4">
+            <GoogleSpinner />
+            <p className="text-muted-foreground font-semibold">Initializing Editor...</p>
+        </div>
+    }>
       <EditorLoader />
     </Suspense>
   );
