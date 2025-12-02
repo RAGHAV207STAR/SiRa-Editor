@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
@@ -85,7 +84,6 @@ function HistoryItem({ sheet, selectionMode, isSelected, onToggleSelect, setSele
         if (selectionMode) {
             onToggleSelect(sheet.id, e.shiftKey);
         } else {
-            // On both mobile and desktop, a single click now opens the preview
             setIsPreviewOpen(true);
         }
     };
@@ -338,21 +336,19 @@ export function HistoryPageClient() {
       batch.delete(docRef);
     });
 
-    batch.commit()
-      .then(() => {
+    batch.commit().then(() => {
         toast({
             title: `${selectedIds.size} Item(s) Permanently Deleted`,
             variant: 'destructive'
         });
         setSelectedIds(new Set());
         setSelectionMode(false);
-      })
-      .catch(() => {
-         errorEmitter.emit('permission-error', new FirestorePermissionError({
-            path: `users/${user.uid}/photosheets`,
-            operation: 'delete',
-         }));
-      });
+    }).catch(e => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+           path: `users/${user.uid}/photosheets`,
+           operation: 'delete',
+        }));
+    });
   };
 
   const handleBulkAction = (action: 'print' | 'download') => {
@@ -542,5 +538,3 @@ export function HistoryPageClient() {
     </div>
   );
 }
-
-    
