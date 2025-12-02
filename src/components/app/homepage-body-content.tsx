@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Download, Zap, Printer, Settings, ShieldCheck, Gift, FileQuestion, ArrowRight, Minus, Plus } from 'lucide-react';
+import { Download, Zap, Printer, Settings, ShieldCheck, Gift, FileQuestion, ArrowRight } from 'lucide-react';
 import { usePWAInstall } from '@/hooks/use-pwa-install';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -16,19 +16,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { useState, useEffect } from 'react';
-import { Input } from '@/components/ui/input';
+import { useState } from 'react';
+import { NumberStepper } from '@/components/ui/number-stepper';
 
 const copyOptions = [1, 2, 4, 6, 8, 10, 12, 20, 30];
 
-interface HomepageBodyContentProps {
-    onCollageClick: () => void;
-}
-
-export default function HomepageBodyContent({ onCollageClick }: HomepageBodyContentProps) {
+export default function HomepageBodyContent() {
   const [selectedCopies, setSelectedCopies] = useState<number | null>(null);
   const [customCopies, setCustomCopies] = useState<string>('');
-  const [isCustomSelected, setIsCustomSelected] = useState(false);
   const router = useRouter();
   const { canInstall, install } = usePWAInstall();
   const { toast } = useToast();
@@ -45,7 +40,6 @@ export default function HomepageBodyContent({ onCollageClick }: HomepageBodyCont
   }
 
   const handleSelect = (num: number) => {
-    setIsCustomSelected(false);
     setSelectedCopies(num);
     const params = new URLSearchParams();
     params.set('copies', num.toString());
@@ -56,10 +50,8 @@ export default function HomepageBodyContent({ onCollageClick }: HomepageBodyCont
     e.preventDefault();
     const num = parseInt(customCopies, 10);
     if (!isNaN(num) && num > 0) {
-        setSelectedCopies(num);
-        const params = new URLSearchParams();
-        params.set('copies', num.toString());
-        router.push(`/editor?${params.toString()}`);
+        handleSelect(num);
+        return;
     } else {
         toast({
             variant: 'destructive',
@@ -67,14 +59,6 @@ export default function HomepageBodyContent({ onCollageClick }: HomepageBodyCont
             description: 'Please enter a valid number of copies.'
         })
     }
-  }
-
-  const updateCustomCopies = (amount: number) => {
-    setCustomCopies(prev => {
-        const current = parseInt(prev, 10) || 0;
-        const newValue = Math.max(1, current + amount);
-        return newValue.toString();
-    })
   }
 
   const features = [
@@ -131,29 +115,12 @@ export default function HomepageBodyContent({ onCollageClick }: HomepageBodyCont
                       <CardDescription className="text-slate-600">How many photos do you need on the sheet?</CardDescription>
                     </CardHeader>
                     <CardContent className="p-0">
-                      <motion.form 
+                      <form 
                           className="mb-4 flex items-stretch justify-center gap-2"
                           onSubmit={handleCustomSubmit}
                       >
-                          <div className="flex-grow flex items-center justify-center h-14 rounded-lg bg-slate-100 border p-1">
-                                <Button type="button" variant="ghost" size="icon" className="h-full w-12 text-muted-foreground hover:bg-slate-200" onClick={() => updateCustomCopies(-1)}><Minus className="h-5 w-5"/></Button>
-                                <Input 
-                                    type="number"
-                                    placeholder="e.g. 15"
-                                    className="h-full w-full max-w-[120px] text-center text-xl font-semibold bg-transparent border-0 shadow-none focus-visible:ring-0"
-                                    value={customCopies}
-                                    onChange={(e) => setCustomCopies(e.target.value)}
-                                    min="1"
-                                />
-                                <Button type="button" variant="ghost" size="icon" className="h-full w-12 text-muted-foreground hover:bg-slate-200" onClick={() => updateCustomCopies(1)}><Plus className="h-5 w-5"/></Button>
-                          </div>
-                          <motion.div whileTap={{ scale: 0.95 }} className="flex">
-                            <Button type="submit" size="lg" className="h-14 w-16 bg-slate-800 text-white hover:bg-slate-700 shadow-md">
-                                <span className="sr-only">Go</span>
-                                <ArrowRight className="h-6 w-6"/>
-                            </Button>
-                          </motion.div>
-                      </motion.form>
+                           <NumberStepper value={customCopies} onValueChange={setCustomCopies} min={1} onGoClick={handleCustomSubmit} />
+                      </form>
 
                       <div className="relative my-4">
                           <div className="absolute inset-0 flex items-center">
@@ -271,9 +238,3 @@ export default function HomepageBodyContent({ onCollageClick }: HomepageBodyCont
       </>
   );
 }
-    
-    
-
-    
-
-

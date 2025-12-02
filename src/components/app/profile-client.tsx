@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { ChevronRight, Edit, LogOut, User as UserIcon, Loader2, History, LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useUser, useAuth } from "@/firebase";
+import { useUser, useAuth, FirestorePermissionError, errorEmitter } from "@/firebase";
 import { signOut, updateProfile } from "firebase/auth";
 import Link from "next/link";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
@@ -52,26 +52,28 @@ export default function ProfilePageClient() {
     };
   
     const handleUpdateProfile = async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!user) return;
-  
-      setIsUpdating(true);
-      try {
-        await updateProfile(user, { displayName });
-        toast({
-          title: "Profile Updated",
-          description: "Your profile has been successfully updated.",
-        });
-        setIsEditModalOpen(false);
-      } catch (error: any) {
-        toast({
-          variant: "destructive",
-          title: "Update Failed",
-          description: error.message,
-        });
-      } finally {
-        setIsUpdating(false);
-      }
+        e.preventDefault();
+        if (!user || !auth.currentUser) return;
+    
+        setIsUpdating(true);
+        updateProfile(auth.currentUser, { displayName })
+            .then(() => {
+                toast({
+                    title: "Profile Updated",
+                    description: "Your profile has been successfully updated.",
+                });
+                setIsEditModalOpen(false);
+            })
+            .catch((error: any) => {
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: `users/${user.uid}`,
+                    operation: 'update',
+                    requestResourceData: { displayName }
+                }));
+            })
+            .finally(() => {
+                setIsUpdating(false);
+            });
     };
   
     if (isUserLoading) {

@@ -12,7 +12,7 @@ import { LanguageProvider } from '@/context/language-context';
 import SessionValidator from "./session-validator";
 import { useSidebar } from '@/components/ui/sidebar';
 import { cn } from "@/lib/utils";
-import { useEffect } from "react";
+import { useEffect }from "react";
 
 function LayoutWithSidebar({ children }: { children: React.ReactNode }) {
     const { state } = useSidebar();

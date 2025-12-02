@@ -1,6 +1,7 @@
 
 "use client";
 
+import React from 'react';
 import { useEditor, type PageSize, type ImageWithDimensions, type Photo } from '@/context/editor-context';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -438,7 +439,7 @@ const PreviewActions = () => {
     )
 }
 
-export default function PreviewStep({ onBack }: PreviewStepProps) {
+const PreviewStep = ({ onBack }: PreviewStepProps) => {
   const { 
     images, 
     photos,
@@ -455,7 +456,7 @@ export default function PreviewStep({ onBack }: PreviewStepProps) {
   }, [onBack]);
 
   const totalSheets = photos.length;
-  const currentSheetPhotos = useMemo(() => photos[currentSheet] || [], [photos, currentSheet]);
+  
   const selectedPhoto = useMemo(() => {
     if (selectedPhotoId === null) return null;
     return photos.flat().find(p => p.id === selectedPhotoId) || null;
@@ -468,7 +469,10 @@ export default function PreviewStep({ onBack }: PreviewStepProps) {
     return '210/297';
   }, [pageWidthCm, pageHeightCm]);
 
-  const currentPhotoIds = useMemo(() => currentSheetPhotos.map(p => p.id), [currentSheetPhotos]);
+  const currentPhotoIds = useMemo(() => {
+    const sheetPhotos = photos[currentSheet] || [];
+    return sheetPhotos.map(p => p.id.toString());
+  }, [photos, currentSheet]);
 
   return (
     <div className="flex-grow w-full h-full flex flex-col md:flex-row p-2 sm:p-4 md:p-6 gap-6 pb-24 md:pb-6">
@@ -488,7 +492,7 @@ export default function PreviewStep({ onBack }: PreviewStepProps) {
           <div className="w-full max-w-lg shadow-lg border rounded-lg bg-slate-100 p-2 mt-4">
               <div className="w-full relative" style={{aspectRatio}}>
                   <SortableContext items={currentPhotoIds}>
-                    <SheetPreview photos={photos} />
+                    <SheetPreview photos={photos[currentSheet] || []} />
                   </SortableContext>
               </div>
           </div>
@@ -532,4 +536,6 @@ export default function PreviewStep({ onBack }: PreviewStepProps) {
       </div>
     </div>
   );
-}
+};
+
+export default React.memo(PreviewStep);

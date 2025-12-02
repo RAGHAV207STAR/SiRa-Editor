@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from 'react';
-import { useEditor, type EditorState } from '@/context/editor-context';
+import { useEditor, type EditorState, type ImageWithDimensions, type Photo } from '@/context/editor-context';
 import UploadStep from './steps/upload-step';
 import PreviewStep from './steps/preview-step';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -10,7 +10,19 @@ import { doc } from 'firebase/firestore';
 import { GoogleSpinner } from '../ui/google-spinner';
 import SelectCopiesStep from './steps/select-copies-step';
 import { AnimatePresence, motion } from 'framer-motion';
-import { DndContext, DragEndEvent, PointerSensor, TouchSensor, KeyboardSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core';
+import { 
+    DndContext, 
+    DragEndEvent, 
+    DragStartEvent, 
+    DragOverlay,
+    PointerSensor, 
+    TouchSensor, 
+    KeyboardSensor, 
+    useSensor, 
+    useSensors, 
+    closestCenter 
+} from '@dnd-kit/core';
+import Image from 'next/image';
 
 interface Photosheet {
   id: string;
@@ -24,13 +36,27 @@ interface EditorWizardProps {
   copies: string | null;
 }
 
+const DraggableItemPreview = ({ item }: { item: ImageWithDimensions | Photo }) => {
+    const src = 'imageSrc' in item ? item.imageSrc : item.src;
+    if (!src) return null;
+
+    return (
+        <div className="w-24 h-24 relative cursor-grabbing rounded-lg overflow-hidden shadow-2xl bg-white border-2 border-primary transform rotate-6">
+            <Image src={src} alt="Dragging item" fill className="object-cover" />
+        </div>
+    );
+};
+
+
 export default function EditorWizard({ historyId, copies: copiesParam }: EditorWizardProps) {
   const [step, setStep] = useState<WizardStep>('select-copies');
+  const [activeDragItem, setActiveDragItem] = useState<ImageWithDimensions | Photo | null>(null);
   const { 
       setEditorState, 
       setCopies: setEditorCopies, 
       resetEditor,
       images,
+      photos,
       swapPhotoItems,
       placeImageInSlot,
   } = useEditor();
@@ -40,8 +66,22 @@ export default function EditorWizard({ historyId, copies: copiesParam }: EditorW
       useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
       useSensor(KeyboardSensor)
   );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const isFromUploadedList = active.data.current?.isFromUploadedList;
+
+    if (isFromUploadedList) {
+        const image = images.find(img => img.src === active.id);
+        if (image) setActiveDragItem(image);
+    } else {
+        const photo = photos.flat().find(p => p.id.toString() === active.id.toString());
+        if (photo) setActiveDragItem(photo);
+    }
+  };
   
   const handleDragEnd = (event: DragEndEvent) => {
+      setActiveDragItem(null);
       const { active, over } = event;
   
       if (!over) return;
@@ -51,7 +91,7 @@ export default function EditorWizard({ historyId, copies: copiesParam }: EditorW
   
       if (activeId === overId) return;
   
-      const isDraggingFromUploadedList = !!(active.data.current?.isFromUploadedList);
+      const isDraggingFromUploadedList = active.data.current?.isFromUploadedList;
   
       if (isDraggingFromUploadedList) {
         const imageToPlace = images.find(img => img.src === activeId);
@@ -75,23 +115,20 @@ export default function EditorWizard({ historyId, copies: copiesParam }: EditorW
 
   useEffect(() => {
     if (historyId) {
-      // If we're loading from history, we wait for the data to be fetched.
-      // The loading spinner will be shown.
+      // Loading from history, wait for data.
       return;
     }
 
-    // This logic runs when not loading from history.
     if (!historyId && !copiesParam) {
       resetEditor();
       setStep('select-copies');
     } else if (copiesParam) {
       const parsedCopies = parseInt(copiesParam, 10);
+      resetEditor(); // Reset first to ensure clean state
       if (!isNaN(parsedCopies)) {
-        resetEditor(); // Reset first to ensure clean state
         setEditorCopies(parsedCopies);
         setStep('upload-photos');
       } else {
-        resetEditor();
         setStep('select-copies');
       }
     }
@@ -123,13 +160,13 @@ export default function EditorWizard({ historyId, copies: copiesParam }: EditorW
 
       switch (step) {
           case 'select-copies':
-              return <SelectCopiesStep onContinue={onContinue} />;
+              return <SelectCopiesStep onContinue={() => goTo('upload-photos')} />;
           case 'upload-photos':
               return <UploadStep onContinue={onContinue} onBack={onBackToCopies} />;
           case 'page-setup':
               return <PreviewStep onBack={onBackToUpload} />;
           default:
-              return <SelectCopiesStep onContinue={onContinue} />;
+              return <SelectCopiesStep onContinue={() => goTo('upload-photos')} />;
       }
   }
 
@@ -137,6 +174,7 @@ export default function EditorWizard({ historyId, copies: copiesParam }: EditorW
     <DndContext 
         sensors={sensors}
         collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
     >
       <div className="flex flex-col flex-grow bg-background">
@@ -153,6 +191,9 @@ export default function EditorWizard({ historyId, copies: copiesParam }: EditorW
               </motion.div>
           </AnimatePresence>
       </div>
+       <DragOverlay>
+            {activeDragItem ? <DraggableItemPreview item={activeDragItem} /> : null}
+       </DragOverlay>
     </DndContext>
   );
 }
