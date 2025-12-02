@@ -6,7 +6,7 @@ import { useEditor, type PageSize, type ImageWithDimensions, type Photo } from '
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import SheetPreview from '../sheet-preview';
+import SheetPreview from '@/components/app/sheet-preview';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, ChevronLeft, ChevronRight, FileImage, FileText, Loader2, Printer, RotateCcw, RectangleVertical, RectangleHorizontal, Settings, Image as ImageIcon, Layout, Type, AlignCenter, AlignLeft, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Expand, Shrink, Download } from 'lucide-react';
@@ -164,7 +164,7 @@ const GlobalSettingsPanel = () => {
                     <AccordionItem value="photo-layout">
                          <AccordionTrigger className="text-sm font-semibold flex items-center text-muted-foreground hover:no-underline">
                             <div className="flex items-center gap-2">
-                                <ImageIcon className="h-4 w-4" /> Photo &amp; Layout
+                                <ImageIcon className="h-4 w-4" /> Photo & Layout
                             </div>
                         </AccordionTrigger>
                          <AccordionContent className="space-y-4 pt-4">
@@ -478,7 +478,7 @@ const PreviewStep = ({ onBack }: PreviewStepProps) => {
     <div className="flex-grow w-full h-full flex flex-col md:flex-row p-2 sm:p-4 md:p-6 gap-6 pb-24 md:pb-6">
       <div className="flex-1 flex flex-col items-center justify-start w-full h-full min-h-0">
           <div className="text-center mb-4">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Arrange &amp; Finalize</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Arrange & Finalize</h1>
             <p className="text-muted-foreground mt-1 text-sm sm:text-base">Drag photos into the sheet. Click a photo to edit its style.</p>
           </div>
            {images.length > 0 && (

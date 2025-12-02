@@ -9,7 +9,7 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/app/app-sidebar';
 import GoogleAnalytics from '@/components/app/google-analytics';
 import { LanguageProvider } from '@/context/language-context';
-import SessionValidator from "./session-validator";
+import SessionValidator from "@/components/app/session-validator";
 import { useSidebar } from '@/components/ui/sidebar';
 import { cn } from "@/lib/utils";
 import { useEffect }from "react";
