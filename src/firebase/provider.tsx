@@ -1,21 +1,17 @@
 
 'use client';
 
-import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import {
     Firestore,
-    Query,
-    onSnapshot,
-    DocumentData,
-    FirestoreError,
-    QuerySnapshot,
-    CollectionReference,
+    doc,
+    serverTimestamp,
   } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
-import { FirestorePermissionError } from './errors';
-import { errorEmitter } from './error-emitter';
+import { usePathname } from 'next/navigation';
+import { setDocumentNonBlocking } from './non-blocking-updates';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -184,119 +180,41 @@ export function useFirebaseApp(optional: boolean = false): FirebaseApp | null {
   return firebaseApp ?? null;
 };
 
-type MemoFirebase <T> = T & {__memo?: boolean};
-
-export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | (MemoFirebase<T>) {
-  const memoized = useMemo(factory, deps);
-  
-  if(typeof memoized !== 'object' || memoized === null) return memoized;
-  (memoized as MemoFirebase<T>).__memo = true;
-  
-  return memoized;
-}
-
 export function useUser(optional: true): UserHookResult;
 export function useUser(): UserHookResult;
 /**
  * Hook specifically for accessing the authenticated user's state.
  * This provides the User object, loading status, and any auth errors.
+ * It also handles updating the user's 'lastSeen' status in Firestore.
+ * @param {boolean} optional - If true, does not throw error if user is not available.
  * @returns {UserHookResult} Object with user, isUserLoading, userError.
  */
 export function useUser(optional: boolean = false): UserHookResult {
-  const { user, isUserLoading, userError } = useFirebase(true);
+  const { user, isUserLoading, userError, firestore } = useFirebase(true);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (user && firestore) {
+      const userDocRef = doc(firestore, 'users', user.uid);
+      const userData = {
+        displayName: user.displayName,
+        email: user.email,
+        photoURL: user.photoURL,
+        lastSeen: serverTimestamp(),
+      };
+      // Non-blocking write to create or update the user profile.
+      setDocumentNonBlocking(userDocRef, userData, { merge: true });
+    }
+  }, [user, firestore, pathname]); // Reruns on user change or navigation
+
+  if (!optional && isUserLoading) {
+    // You might want to return a loading state or null instead of throwing an error
+    // depending on the desired behavior for components that rely on this hook.
+  }
+
+  if (!optional && !user && !isUserLoading) {
+    // Handle case where user is definitively not logged in, if necessary.
+  }
+
   return { user: user ?? null, isUserLoading: isUserLoading ?? true, userError: userError ?? null };
 };
-
-// useCollection hook
-export type WithId<T> = T & { id: string };
-
-export interface UseCollectionResult<T> {
-  data: WithId<T>[] | null;
-  isLoading: boolean;
-  error: FirestoreError | Error | null;
-}
-
-export interface InternalQuery extends Query<DocumentData> {
-    _query: {
-      path: {
-        canonicalString(): string;
-        toString(): string;
-      }
-    }
-  }
-
-export function useCollection<T = any>(
-    memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
-): UseCollectionResult<T> {
-  type ResultItemType = WithId<T>;
-  type StateDataType = ResultItemType[] | null;
-
-  const [data, setData] = useState<StateDataType>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<FirestoreError | Error | null>(null);
-
-  const isMounted = useRef(true);
-  useEffect(() => {
-    isMounted.current = true;
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!memoizedTargetRefOrQuery) {
-      setData(null);
-      setIsLoading(false);
-      setError(null);
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    const unsubscribe = onSnapshot(
-      memoizedTargetRefOrQuery,
-      (snapshot: QuerySnapshot<DocumentData>) => {
-        if (!isMounted.current) return;
-        const results: ResultItemType[] = snapshot.docs.map(doc => ({ ...(doc.data() as T), id: doc.id }));
-        setData(results);
-        setError(null);
-        setIsLoading(false);
-      },
-      (error: FirestoreError) => {
-        if (!isMounted.current) return;
-        
-        let path: string | undefined;
-        if (memoizedTargetRefOrQuery.type === 'collection') {
-            path = (memoizedTargetRefOrQuery as CollectionReference).path;
-        } else if ((memoizedTargetRefOrQuery as unknown as InternalQuery)?._query?.path) {
-            path = (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.toString();
-        }
-
-        if (path) {
-            const contextualError = new FirestorePermissionError({
-              operation: 'list',
-              path,
-            })
-    
-            setError(contextualError)
-            errorEmitter.emit('permission-error', contextualError);
-        } else {
-            setError(error); // Fallback to original error
-        }
-
-        setData(null)
-        setIsLoading(false)
-      }
-    );
-
-    return () => unsubscribe();
-  }, [memoizedTargetRefOrQuery]);
-
-  if(memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
-    throw new Error('A non-memoized query was passed to useCollection. Use the useMemoFirebase hook to memoize the query.');
-  }
-  return { data, isLoading, error };
-}
-
-    
