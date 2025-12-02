@@ -6,14 +6,11 @@ import { PlaceHolderImages, type ImagePlaceholder } from '@/lib/placeholder-imag
 import HomepageHeader from '@/components/app/homepage-header';
 import Image from 'next/image';
 import { Skeleton } from '@/components/ui/skeleton';
-import dynamic from 'next/dynamic';
-import { useToast } from '@/hooks/use-toast';
 import HomepageBodyContent from '@/components/app/homepage-body-content';
 
 // This is a Client Component to manage the state of the SmartPhotoPicker.
 export default function Home() {
   const [heroImage, setHeroImage] = useState<ImagePlaceholder | null>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
     // Select a random image only on the client-side to prevent hydration mismatch.
@@ -21,13 +18,6 @@ export default function Home() {
       setHeroImage(PlaceHolderImages[Math.floor(Math.random() * PlaceHolderImages.length)]);
     }
   }, [heroImage]);
-
-  const handleCollageClick = () => {
-    toast({
-        title: "Coming Soon!",
-        description: "The photo collage feature is not available yet, but we're working on it.",
-    });
-  }
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-purple-50 overflow-x-hidden">
@@ -52,7 +42,7 @@ export default function Home() {
         </header>
 
         <main className="flex-grow w-full px-4 py-8 flex flex-col items-center gap-8">
-          <HomepageBodyContent onCollageClick={handleCollageClick} />
+          <HomepageBodyContent />
         </main>
       
       <footer className="py-6 px-4 text-center text-sm w-full">
