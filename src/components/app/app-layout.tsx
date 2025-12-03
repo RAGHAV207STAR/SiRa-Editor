@@ -5,12 +5,11 @@ import { Toaster } from "@/components/ui/toaster"
 import BottomNavbar from '@/components/app/bottom-navbar';
 import Header from '@/components/app/header';
 import { EditorProvider } from '@/context/editor-context';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarInset, useSidebar } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/app/app-sidebar';
 import GoogleAnalytics from '@/components/app/google-analytics';
 import { LanguageProvider } from '@/context/language-context';
 import SessionValidator from "@/components/app/session-validator";
-import { useSidebar } from '@/components/ui/sidebar';
 import { cn } from "@/lib/utils";
 import { useEffect }from "react";
 
@@ -63,3 +62,4 @@ export default function AppLayout({
     </>
   );
 }
+
