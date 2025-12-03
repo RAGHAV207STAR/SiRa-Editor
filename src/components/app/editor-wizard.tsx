@@ -63,7 +63,13 @@ export default function EditorWizard({ historyId, copies: copiesParam }: EditorW
 
   const sensors = useSensors(
       useSensor(PointerSensor),
-      useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
+      useSensor(TouchSensor, {
+        // Press delay of 150ms, with a tolerance of 5px of movement
+        activationConstraint: {
+          delay: 150,
+          tolerance: 5,
+        },
+      }),
       useSensor(KeyboardSensor)
   );
 
