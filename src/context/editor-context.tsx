@@ -169,8 +169,8 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
   const historyId = searchParams.get('historyId');
 
 
-  const setBorderWidth = (value: NumberSetterValue) => setBorderWidthState(handleNumberSetter(value));
-  const setPhotoSpacing = (value: NumberSetterValue) => setPhotoSpacingState(handleNumberSetter(value));
+  const setBorderWidth = useCallback((value: NumberSetterValue) => setBorderWidthState(handleNumberSetter(value)), []);
+  const setPhotoSpacing = useCallback((value: NumberSetterValue) => setPhotoSpacingState(handleNumberSetter(value)), []);
   
   const setPhotoSize = (newSize: { width?: number; height?: number; }, fromUnit: Unit) => {
     if (newSize.width !== undefined && !isNaN(newSize.width)) {
@@ -547,5 +547,3 @@ export function useEditor() {
   }
   return context;
 }
-
-    

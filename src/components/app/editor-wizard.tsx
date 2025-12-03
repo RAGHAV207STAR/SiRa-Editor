@@ -36,6 +36,8 @@ interface EditorWizardProps {
   copies: string | null;
 }
 
+export type WizardStep = 'select-copies' | 'upload-photos' | 'page-setup';
+
 const DraggableItemPreview = ({ item }: { item: ImageWithDimensions | Photo }) => {
     const src = 'imageSrc' in item ? item.imageSrc : item.src;
     if (!src) return null;
