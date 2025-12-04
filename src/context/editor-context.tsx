@@ -19,7 +19,6 @@ export interface Photo {
   fontSize: number; // percentage of photo height
   textAlign: 'left' | 'center' | 'right';
   textVerticalAlign: 'top' | 'middle' | 'bottom';
-  fit: 'cover' | 'contain';
 }
 
 export interface ImageWithDimensions {
@@ -63,7 +62,7 @@ const handleNumberSetter = (value: NumberSetterValue): number => {
 export type EditorState = Omit<EditorContextType, 
   'setImages' | 'setCopies' | 'setPhotos' | 'setCurrentSheet' | 
   'setSelectedPhotoId' | 'swapPhotoItems' | 'placeImageInSlot' | 
-  'updatePhotoText' | 'updatePhotoStyle' | 'togglePhotoFit' |
+  'updatePhotoText' | 'updatePhotoStyle' |
   'setBorderWidth' | 'setBorderColor' | 'setPhotoSpacing' | 'setPhotoSize' |
   'setUnit' | 'setPageSize' | 'setPageDimensions' | 'setOrientation' | 
   'setPageMargins' | 'setEditorState' | 'resetEditor' | 'resetLayout' | 'saveToHistory'
@@ -85,7 +84,6 @@ interface EditorContextType {
   placeImageInSlot: (imageSrc: string, slotId: number) => void;
   updatePhotoText: (photoId: number, text: string) => void;
   updatePhotoStyle: (photoId: number, styles: Partial<Pick<Photo, 'textColor' | 'fontSize' | 'textAlign' | 'textVerticalAlign'>>) => void;
-  togglePhotoFit: (photoId: number) => void;
 
   borderWidth: number;
   setBorderWidth: (value: NumberSetterValue) => void;
@@ -140,7 +138,6 @@ const initialTextColor = '#FFFFFF';
 const initialFontSize = 8; // 8% of photo height
 const initialTextAlign = 'center';
 const initialTextVerticalAlign = 'bottom';
-const initialFit = 'cover';
 
 export function EditorProvider({ children }: { children: React.ReactNode }) {
   const [images, setImages] = useState<ImageWithDimensions[]>([]);
@@ -239,7 +236,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
     return pageMarginsCm;
   }, [pageMarginsCm, unit]);
   
-  useEffect(() => {
+  const generatedPhotos = useMemo(() => {
     const spacingMm = photoSpacing * 10;
     const photoW = photoWidthCm * 10;
     const photoH = photoHeightCm * 10;
@@ -250,21 +247,19 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
     const marginRight = pageMarginsCm.right * 10;
     const marginBottom = pageMarginsCm.bottom * 10;
     const marginLeft = pageMarginsCm.left * 10;
-    
+
     const printableWidth = pageW - marginLeft - marginRight;
     const printableHeight = pageH - marginTop - marginBottom;
 
     if (photoW <= 0 || photoH <= 0 || printableWidth <= 0 || printableHeight <= 0) {
-      setPhotos([]);
-      return;
+      return [];
     }
 
     const cols = Math.floor((printableWidth + spacingMm) / (photoW + spacingMm));
     const rows = Math.floor((printableHeight + spacingMm) / (photoH + spacingMm));
     
     if (cols <= 0 || rows <= 0) {
-      setPhotos([]);
-      return;
+      return [];
     }
     
     const totalPlaceholders = cols * rows;
@@ -299,18 +294,22 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
             fontSize: existingPhoto?.fontSize || initialFontSize,
             textAlign: existingPhoto?.textAlign || initialTextAlign,
             textVerticalAlign: existingPhoto?.textVerticalAlign || initialTextVerticalAlign,
-            fit: existingPhoto?.fit || initialFit,
         });
     }
     newSheets.push(sheetPhotos);
+    return newSheets;
+  }, [copies, photoWidthCm, photoHeightCm, photoSpacing, pageWidthCm, pageHeightCm, pageMarginsCm, images, photos]);
+
+
+  useEffect(() => {
+    setPhotos(generatedPhotos);
     
-    setPhotos(newSheets);
     if(currentSheet !== 0) {
         setCurrentSheet(0);
     }
     setSelectedPhotoId(null);
-
-  }, [copies, photoWidthCm, photoHeightCm, photoSpacing, pageWidthCm, pageHeightCm, pageMarginsCm, orientation, images]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [generatedPhotos]);
 
  const swapPhotoItems = useCallback((activeId: number, overId: number) => {
     setPhotos(prevSheets => {
@@ -330,7 +329,6 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
             fontSize: currentSheetPhotos[activeIndex].fontSize,
             textAlign: currentSheetPhotos[activeIndex].textAlign,
             textVerticalAlign: currentSheetPhotos[activeIndex].textVerticalAlign,
-            fit: currentSheetPhotos[activeIndex].fit,
         };
         const overPhotoProps = {
             imageSrc: currentSheetPhotos[overIndex].imageSrc,
@@ -339,7 +337,6 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
             fontSize: currentSheetPhotos[overIndex].fontSize,
             textAlign: currentSheetPhotos[overIndex].textAlign,
             textVerticalAlign: currentSheetPhotos[overIndex].textVerticalAlign,
-            fit: currentSheetPhotos[overIndex].fit,
         };
 
         const updatedSheet = currentSheetPhotos.map(p => {
@@ -370,7 +367,6 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
             fontSize: initialFontSize,
             textAlign: initialTextAlign,
             textVerticalAlign: initialTextVerticalAlign,
-            fit: initialFit,
         };
         newSheets[currentSheet] = updatedSheet;
         return newSheets;
@@ -396,19 +392,6 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
                 photo.id === photoId ? { ...photo, ...styles } : photo
             )
         );
-    });
-  }, []);
-
-  const togglePhotoFit = useCallback((photoId: number) => {
-    setPhotos(prevSheets => {
-      return prevSheets.map(sheet =>
-        sheet.map(photo => {
-          if (photo.id === photoId) {
-            return { ...photo, fit: photo.fit === 'cover' ? 'contain' : 'cover' };
-          }
-          return photo;
-        })
-      );
     });
   }, []);
 
@@ -456,17 +439,16 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
     resetLayout();
   }, [resetLayout]);
 
-  const saveToHistory = () => {
+  const saveToHistory = useCallback(() => {
     if (!user || !firestore || images.length === 0) return;
     const firstImageSrc = images[0]?.src;
     if (!firstImageSrc) return;
 
-    // Destructure all functions from the current state to get a plain state object
     const editorStateToSave: EditorState = {
         images, copies, photos, currentSheet, selectedPhotoId,
         borderWidth, borderColor, photoSpacing, photoWidthCm, photoHeightCm,
         unit, pageSize, pageWidthCm, pageHeightCm, orientation, pageMarginsCm,
-        displayPhotoWidth, displayPhotoHeight, displayPageWidth, displayPageHeight, displayPageMargins
+        displayPhotoWidth, displayPhotoHeight, displayPageWidth, displayPageMargins
     };
 
     const photosheetData = {
@@ -483,7 +465,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
     } else {
         addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'photosheets'), photosheetData);
     }
-  }
+  }, [user, firestore, images, copies, photos, currentSheet, selectedPhotoId, borderWidth, borderColor, photoSpacing, photoWidthCm, photoHeightCm, unit, pageSize, pageWidthCm, pageHeightCm, orientation, pageMarginsCm, displayPhotoWidth, displayPhotoHeight, displayPageWidth, displayPageMargins, historyId]);
 
 
   const value: EditorContextType = {
@@ -501,7 +483,6 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
     placeImageInSlot,
     updatePhotoText,
     updatePhotoStyle,
-    togglePhotoFit,
     borderWidth,
     setBorderWidth,
     borderColor,

@@ -32,23 +32,22 @@ const LoginPageClient = () => {
     const router = useRouter();
     const { toast } = useToast();
 
-    useEffect(() => {
-        if (!isUserLoading && user) {
-            router.push('/');
-        }
-    }, [user, isUserLoading, router]);
+    if (!isUserLoading && user) {
+        router.push('/');
+    }
+
 
     const handleAuthAction = async (action: 'login' | 'signup') => {
         if (!auth) return;
         setAuthActionLoading(action);
         
-        const authPromise = action === 'login'
-            ? signInWithEmailAndPassword(auth, email, password)
-            : createUserWithEmailAndPassword(auth, email, password);
-
         try {
-            await authPromise;
-            // The useEffect hook will handle the redirect on successful login
+            if (action === 'login') {
+                await signInWithEmailAndPassword(auth, email, password);
+            } else {
+                await createUserWithEmailAndPassword(auth, email, password);
+            }
+            router.push('/');
         } catch (error: any) {
             toast({
                 variant: 'destructive',
@@ -71,7 +70,7 @@ const LoginPageClient = () => {
         
         try {
             await signInWithPopup(auth, provider);
-             // The useEffect hook will handle the redirect on successful login
+            router.push('/');
         } catch (error: any) {
             if (error.code !== 'auth/popup-closed-by-user') {
                 toast({
@@ -85,7 +84,7 @@ const LoginPageClient = () => {
         }
     };
 
-    if (isUserLoading || (!isUserLoading && user)) {
+    if (isUserLoading || user) {
         return (
           <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-br from-slate-50 to-blue-100">
             <div className="flex flex-col items-center gap-4 text-muted-foreground">
@@ -169,5 +168,3 @@ const LoginPageClient = () => {
 }
 
 export default LoginPageClient;
-
-    

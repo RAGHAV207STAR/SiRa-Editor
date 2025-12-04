@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useEditor, type EditorState, type ImageWithDimensions, type Photo } from '@/context/editor-context';
 import UploadStep from './steps/upload-step';
 import PreviewStep from './steps/preview-step';
@@ -15,8 +15,8 @@ import {
     DragEndEvent, 
     DragStartEvent, 
     DragOverlay,
-    PointerSensor, 
-    TouchSensor, 
+    PointerSensor,
+    TouchSensor,
     KeyboardSensor, 
     useSensor, 
     useSensors, 
@@ -24,16 +24,16 @@ import {
 } from '@dnd-kit/core';
 import Image from 'next/image';
 
+interface EditorWizardProps {
+  historyId: string | null;
+  copies: string | null;
+}
+
 interface Photosheet {
   id: string;
   thumbnailUrl: string; 
   copies: number;
   editorState: EditorState;
-}
-
-interface EditorWizardProps {
-  historyId: string | null;
-  copies: string | null;
 }
 
 export type WizardStep = 'select-copies' | 'upload-photos' | 'page-setup';
@@ -64,28 +64,31 @@ export default function EditorWizard({ historyId, copies: copiesParam }: EditorW
   } = useEditor();
 
   const sensors = useSensors(
-      useSensor(PointerSensor),
-      useSensor(TouchSensor, {
-        // Press delay of 150ms, with a tolerance of 5px of movement
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 10,
+      },
+    }),
+    useSensor(TouchSensor, {
         activationConstraint: {
-          delay: 150,
+          delay: 250,
           tolerance: 5,
         },
-      }),
-      useSensor(KeyboardSensor)
+    }),
+    useSensor(KeyboardSensor)
   );
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     const isFromUploadedList = active.data.current?.isFromUploadedList;
 
+    let item;
     if (isFromUploadedList) {
-        const image = images.find(img => img.src === active.id);
-        if (image) setActiveDragItem(image);
+        item = images.find(img => img.src === active.id);
     } else {
-        const photo = photos.flat().find(p => p.id.toString() === active.id.toString());
-        if (photo) setActiveDragItem(photo);
+        item = photos.flat().find(p => p && p.id.toString() === active.id.toString());
     }
+    if (item) setActiveDragItem(item);
   };
   
   const handleDragEnd = (event: DragEndEvent) => {
@@ -100,13 +103,15 @@ export default function EditorWizard({ historyId, copies: copiesParam }: EditorW
       if (activeId === overId) return;
   
       const isDraggingFromUploadedList = active.data.current?.isFromUploadedList;
+      const isOverPhotoItem = over.data.current?.type === 'photo';
+
   
-      if (isDraggingFromUploadedList) {
+      if (isDraggingFromUploadedList && isOverPhotoItem) {
         const imageToPlace = images.find(img => img.src === activeId);
         if (imageToPlace) {
           placeImageInSlot(imageToPlace.src, parseInt(overId, 10));
         }
-      } else {
+      } else if (!isDraggingFromUploadedList && isOverPhotoItem) {
         swapPhotoItems(parseInt(activeId, 10), parseInt(overId, 10));
       }
   };

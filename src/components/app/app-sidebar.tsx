@@ -5,9 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, History, User, Image as ImageIcon } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
-import { useState, useEffect } from 'react';
 
-function ClientAppSidebar() {
+export default function AppSidebar() {
   const pathname = usePathname();
 
   const navItems = [
@@ -43,18 +42,4 @@ function ClientAppSidebar() {
       </SidebarContent>
     </Sidebar>
   );
-}
-
-export default function AppSidebar() {
-  const [hasMounted, setHasMounted] = useState(false);
-  
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
-  if (!hasMounted) {
-    return null;
-  }
-
-  return <ClientAppSidebar />;
 }

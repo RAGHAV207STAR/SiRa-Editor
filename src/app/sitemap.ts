@@ -8,37 +8,28 @@ export default function sitemap(): MetadataRoute.Sitemap {
     {
       url: `${baseUrl}/`,
       lastModified: new Date(),
-      changeFrequency: 'daily',
+      changeFrequency: 'monthly',
       priority: 1.0,
     },
     {
-      url: `${baseUrl}/login`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
-  ];
-
-  const featurePages: MetadataRoute.Sitemap = [
-    {
-      url: `${baseUrl}/editor`,
+      url: `${baseUrl}/passport-photo-maker`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/history`,
+      url: `${baseUrl}/a4-photo-sheet-layout`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
-      priority: 0.7,
+      priority: 0.8,
     },
-    {
-      url: `${baseUrl}/profile`,
+     {
+      url: `${baseUrl}/id-photo-print`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
-      priority: 0.5,
+      priority: 0.7,
     },
   ];
 
-  return [...staticPages, ...featurePages];
+  return [...staticPages];
 }

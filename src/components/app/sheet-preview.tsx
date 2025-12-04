@@ -44,7 +44,7 @@ export function PhotoItem({
       top: `${photo.y}%`,
       width: `${photo.width}%`,
       height: `${photo.height}%`,
-      opacity: isDragging ? 0 : 1,
+      opacity: isDragging ? 0.3 : 1,
       zIndex: isDragging ? 20 : (isSelected ? 10 : 1),
   };
 
@@ -70,8 +70,6 @@ export function PhotoItem({
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
       data-photo-id={photo.id}
       className={cn(
           'photo-item group transition-all duration-200', 
@@ -79,6 +77,8 @@ export function PhotoItem({
           isOver && !isDragging && 'drag-over'
       )}
       onClick={handleSelect}
+      {...attributes}
+      {...listeners}
     >
       {photo.imageSrc ? (
          <div
@@ -93,8 +93,7 @@ export function PhotoItem({
             src={photo.imageSrc} 
             alt={`Photo ${photo.id}`} 
             className={cn(
-              "photo-preview pointer-events-none w-full h-full",
-              photo.fit === 'cover' ? 'object-cover' : 'object-contain'
+              "photo-preview pointer-events-none w-full h-full object-cover"
             )}
           />
           {photo.text && (
@@ -117,7 +116,6 @@ export function PhotoItem({
               </div>
             </div>
           )}
-
         </div>
       ) : (
         <div className="w-full h-full border-dashed border-slate-300" style={{borderWidth: '2px'}}>

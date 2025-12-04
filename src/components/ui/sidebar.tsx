@@ -67,11 +67,6 @@ const SidebarProvider = React.forwardRef<
   ) => {
     const isMobile = useIsMobile()
     const [openMobile, setOpenMobile] = React.useState(false)
-    const [hasMounted, setHasMounted] = React.useState(false)
-
-    React.useEffect(() => {
-        setHasMounted(true);
-    }, []);
 
     // This is the internal state of the sidebar.
     // We use openProp and setOpenProp for control from outside the component.
@@ -132,10 +127,6 @@ const SidebarProvider = React.forwardRef<
       [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
     )
 
-    if (!hasMounted) {
-      return null;
-    }
-
     return (
       <SidebarContext.Provider value={contextValue}>
         <TooltipProvider delayDuration={0}>
@@ -180,7 +171,7 @@ const Sidebar = React.forwardRef<
     }, []);
 
     if (!hasMounted) {
-        return null;
+      return null;
     }
 
     if (collapsible === "none") {
@@ -221,7 +212,7 @@ const Sidebar = React.forwardRef<
         </Sheet>
       )
     }
-
+    
     return (
       <div
         ref={ref}

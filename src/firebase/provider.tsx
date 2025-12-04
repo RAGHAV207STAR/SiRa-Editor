@@ -4,13 +4,9 @@
 import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import {
-    Firestore,
-    doc,
-    serverTimestamp,
+    Firestore
   } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
-import { usePathname } from 'next/navigation';
-import { setDocumentNonBlocking } from './non-blocking-updates';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 interface FirebaseProviderProps {
@@ -80,8 +76,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       setUserAuthState({ user: null, isUserLoading: false, userError: new Error("Auth service not provided.") });
       return;
     }
-
-    setUserAuthState({ user: null, isUserLoading: true, userError: null }); // Reset on auth instance change
 
     const unsubscribe = onAuthStateChanged(
       auth,
@@ -190,22 +184,7 @@ export function useUser(): UserHookResult;
  * @returns {UserHookResult} Object with user, isUserLoading, userError.
  */
 export function useUser(optional: boolean = false): UserHookResult {
-  const { user, isUserLoading, userError, firestore } = useFirebase(true);
-  const pathname = usePathname();
-
-  useEffect(() => {
-    if (user && firestore) {
-      const userDocRef = doc(firestore, 'users', user.uid);
-      const userData = {
-        displayName: user.displayName,
-        email: user.email,
-        photoURL: user.photoURL,
-        lastSeen: serverTimestamp(),
-      };
-      // Non-blocking write to create or update the user profile.
-      setDocumentNonBlocking(userDocRef, userData, { merge: true });
-    }
-  }, [user, firestore, pathname]); // Reruns on user change or navigation
+  const { user, isUserLoading, userError } = useFirebase(true);
 
   if (!optional && isUserLoading) {
     // You might want to return a loading state or null instead of throwing an error

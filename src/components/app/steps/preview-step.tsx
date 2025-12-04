@@ -9,7 +9,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import SheetPreview from '@/components/app/sheet-preview';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, ChevronLeft, ChevronRight, FileImage, FileText, Loader2, Printer, RotateCcw, RectangleVertical, RectangleHorizontal, Settings, Image as ImageIcon, Layout, Type, AlignCenter, AlignLeft, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Expand, Shrink, Download } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, FileImage, FileText, Loader2, Printer, RotateCcw, RectangleVertical, RectangleHorizontal, Settings, Image as ImageIcon, Layout, Type, AlignCenter, AlignLeft, AlignRight, AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, Expand, Shrink, Download, GripVertical } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
@@ -38,8 +38,17 @@ const DraggableUploadedImage = ({ img }: { img: ImageWithDimensions }) => {
         data: { isFromUploadedList: true, image: img }
     });
     return (
-        <div ref={setNodeRef} {...listeners} {...attributes} className="w-20 h-20 relative cursor-grab rounded-md overflow-hidden shadow-md touch-none flex-shrink-0 bg-secondary">
-            <Image src={img.src} alt="Uploaded photo" fill className="object-cover" />
+        <div className="w-20 h-20 relative rounded-md overflow-hidden shadow-md flex-shrink-0 bg-secondary group">
+            <div ref={setNodeRef} className="w-full h-full relative">
+                <Image src={img.src} alt="Uploaded photo" fill className="object-cover" />
+                 <div 
+                    {...listeners}
+                    {...attributes}
+                    className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-grab active:cursor-grabbing transition-opacity"
+                >
+                    <GripVertical className="h-6 w-6 text-white" />
+                </div>
+            </div>
         </div>
     )
 }
@@ -227,7 +236,7 @@ const GlobalSettingsPanel = () => {
 }
 
 const PhotoSettingsPanel = ({ photo, onBack }: { photo: Photo, onBack: () => void }) => {
-    const { updatePhotoText, updatePhotoStyle, togglePhotoFit } = useEditor();
+    const { updatePhotoText, updatePhotoStyle } = useEditor();
 
     return (
         <>
@@ -241,10 +250,6 @@ const PhotoSettingsPanel = ({ photo, onBack }: { photo: Photo, onBack: () => voi
                  <div className="space-y-4">
                     <h3 className="text-sm font-semibold flex items-center text-muted-foreground"><ImageIcon className="mr-2 h-4 w-4" /> Photo Style</h3>
                     <div className="grid grid-cols-1 gap-2 pl-2">
-                       <Button variant="outline" onClick={() => togglePhotoFit(photo.id)}>
-                           {photo.fit === 'cover' ? <Shrink className="mr-2 h-4 w-4" /> : <Expand className="mr-2 h-4 w-4" />}
-                           {photo.fit === 'cover' ? 'Contain' : 'Cover'}
-                       </Button>
                     </div>
                 </div>
 

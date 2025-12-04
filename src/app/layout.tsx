@@ -3,21 +3,24 @@ import type {Metadata, Viewport} from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase';
+import { Suspense } from 'react';
+import { GoogleSpinner } from '@/components/ui/google-spinner';
+import { Providers } from '@/components/app/providers';
 import AppLayout from '@/components/app/app-layout';
 
 const APP_NAME = "SiRa Editor";
 const APP_URL = "https://siraeditor.vercel.app";
-const APP_DESCRIPTION = "SiRa Editor is a fast and professional online photo sheet maker, collage creator, and image editor. Create HD photo sheets, passport photos, layouts, and collages instantly.";
-const OG_IMAGE_URL = `${APP_URL}/og-image.png`;
+const APP_DESCRIPTION = "The easiest free online tool to create perfect passport size photos and ID photo layouts on an A4 sheet. Upload, arrange, and get a print-ready file instantly.";
+const OG_IMAGE_URL = `${APP_URL}/og-image.png`; // Assuming you'll add an og-image.png to your public folder
 
 export const metadata: Metadata = {
   applicationName: APP_NAME,
   title: {
-    default: "SiRa Editor – Photo Sheet Maker & Online Collage Creator",
+    default: "SiRa Editor – Free Passport Size Photo Maker for A4 Sheet",
     template: `%s | ${APP_NAME}`,
   },
   description: APP_DESCRIPTION,
-  keywords: ["Photosheet Maker", "Passport size photo maker", "passport size photo editor", "passport size photo", "Photo Editor", "SiRa Editor", "Photo Sheet Maker", "Collage Maker", "Passport Photo", "Online Editor", "HD Photo Maker", "Layout Creator"],
+  keywords: ["passport size photo maker", "passport photo A4 sheet", "photo ko A4 size me kaise print kare", "Aadhaar photo print", "PAN card photo maker", "photo layout tool India", "free passport photo maker"],
   
   metadataBase: new URL(APP_URL),
   alternates: {
@@ -30,7 +33,7 @@ export const metadata: Metadata = {
     type: "website",
     siteName: APP_NAME,
     title: {
-      default: "SiRa Editor – Online Photo Editor",
+      default: "SiRa Editor – Free Passport Size Photo Maker for A4 Sheet",
       template: `%s | ${APP_NAME}`,
     },
     description: APP_DESCRIPTION,
@@ -40,20 +43,20 @@ export const metadata: Metadata = {
         url: OG_IMAGE_URL,
         width: 1200,
         height: 630,
-        alt: "SiRa Editor - Photo Sheet & Collage Maker",
+        alt: "SiRa Editor - Free Online Passport Photo & A4 Layout Tool",
       },
     ],
-    locale: "en_US",
+    locale: "en_IN",
   },
   
   twitter: {
     card: "summary_large_image",
     title: {
-      default: "SiRa Editor – Photo Sheet Maker",
+      default: "SiRa Editor – Free Passport Size Photo Maker for A4 Sheet",
       template: `%s | ${APP_NAME}`,
     },
     description: APP_DESCRIPTION,
-    creator: "@siraeditor",
+    creator: "@siraeditor", // Replace with your actual Twitter handle if you have one
     images: [OG_IMAGE_URL],
   },
   
@@ -73,15 +76,10 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "default",
     title: APP_NAME,
-    // startupImage: [], // Can be added later
   },
   formatDetection: {
     telephone: false,
   },
-  
-  other: {
-    "google-site-verification": "-30ujEIjJeOl-kZGiqqXrZWLlCrcZ3d6dI1SLSKmd7o",
-  }
 };
 
 export const viewport: Viewport = {
@@ -95,14 +93,13 @@ export const viewport: Viewport = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  "name": APP_NAME,
+  "name": "SiRa Editor",
   "url": APP_URL,
   "logo": `${APP_URL}/icon-512.png`,
-  "description": APP_DESCRIPTION,
+  "description": "Create print-ready passport size photos and ID photo layouts on an A4 sheet for free. Upload your photo, choose your layout, and download instantly.",
   "applicationCategory": "MultimediaApplication",
   "operatingSystem": "All",
-  "browserRequirements": "Requires HTML5 support, JavaScript enabled.",
-  "releaseNotes": "https://siraeditor.vercel.app/",
+  "browserRequirements": "Requires a modern web browser with JavaScript enabled.",
   "offers": {
     "@type": "Offer",
     "price": "0",
@@ -110,11 +107,7 @@ const jsonLd = {
   },
   "creator": {
     "@type": "Organization",
-    "name": "SiRa Editor",
-    "logo": {
-      "@type": "ImageObject",
-      "url": `${APP_URL}/icon-512.png`
-    }
+    "name": "SiRa Editor"
   }
 };
 
@@ -132,18 +125,26 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable}`}>
       <head>
-        <meta name="google-site-verification" content="-30ujEIjJeOl-kZGiqqXrZWLlCrcZ3d6dI1SLSKmd7o" />
+        <meta name="google-adsense-account" content="ca-pub-3291480910940190" />
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3291480910940190" crossOrigin="anonymous"></script>
+      </head>
+      <body className={`font-body antialiased`}>
+        <FirebaseClientProvider>
+          <Suspense fallback={
+            <div className="w-full h-screen flex flex-col items-center justify-center gap-4">
+              <GoogleSpinner />
+              <p className="text-muted-foreground font-semibold">Loading...</p>
+            </div>
+          }>
+            <Providers>
+              <AppLayout>{children}</AppLayout>
+            </Providers>
+          </Suspense>
+        </FirebaseClientProvider>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
-        <meta name="msapplication-TileColor" content="#000000" />
-      </head>
-      <body className={`font-body antialiased`}>
-        <FirebaseClientProvider>
-          <AppLayout>{children}</AppLayout>
-        </FirebaseClientProvider>
       </body>
     </html>
   );

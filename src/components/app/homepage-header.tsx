@@ -14,9 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from '../ui/button';
 import { Badge } from "@/components/ui/badge";
-import { useState, useEffect } from 'react';
 
-function ClientHomepageHeader() {
+export default function HomepageHeader() {
   const { user, isUserLoading } = useUser();
 
   return (
@@ -95,26 +94,4 @@ function ClientHomepageHeader() {
       </div>
     </>
   );
-}
-
-export default function HomepageHeader() {
-  const [isClient, setIsClient] = useState(false);
-  
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  if (!isClient) {
-    // Render a static skeleton on the server
-    return (
-       <div className="relative z-10 flex justify-between items-start p-4">
-        <div className="hidden md:block">
-          <SidebarTrigger className="text-white hover:text-white hover:bg-white/20" />
-        </div>
-        <div className="flex-grow"></div>
-      </div>
-    );
-  }
-  
-  return <ClientHomepageHeader />;
 }
