@@ -268,8 +268,6 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
     const existingPhotosById = new Map<number, Photo>();
     photos.flat().forEach(p => existingPhotosById.set(p.id, p));
 
-    const autoPopulateImageSrc = images.length > 0 ? images[0].src : '';
-
     const sheetPhotos: Photo[] = [];
     for (let i = 0; i < totalPlaceholders; i++) {
         const r = Math.floor(i / cols);
@@ -280,7 +278,11 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         
         const existingPhoto = existingPhotosById.get(i);
         
-        const imageSrc = existingPhoto?.imageSrc || (i < copies ? autoPopulateImageSrc : '');
+        let imageSrc = existingPhoto?.imageSrc || '';
+        if (!imageSrc && i < copies && images.length > 0) {
+          // Cycle through uploaded images
+          imageSrc = images[i % images.length].src;
+        }
 
         sheetPhotos.push({
             id: i,
@@ -528,3 +530,5 @@ export function useEditor() {
   }
   return context;
 }
+
+    
